@@ -1,0 +1,43 @@
+/* src/overlay.css */
+#flow-facilitator-overlay {
+  position: fixed;
+  top: 10px;
+  right: 14px;
+  z-index: 2147483647;
+  display: none;
+  pointer-events: auto;
+}
+#flow-facilitator-overlay #ff-banner {
+  background: linear-gradient(90deg,#0f62fe,#6f4ff2);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-weight:700;
+  box-shadow: 0 6px 18px rgba(15,98,254,0.12);
+}
+#flow-facilitator-overlay .ff-toast {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  background: #fff;
+  border-radius: 10px;
+  padding: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  z-index: 2147483647;
+}
+.ff-modal {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%,-50%);
+  z-index: 2147483647;
+  background: rgba(0,0,0,0.5);
+  padding: 14px;
+  border-radius: 8px;
+}
+.ff-modal .ff-modal-body {
+  background: #fff;
+  padding: 16px;
+  border-radius: 8px;
+}
+.ff-btn { margin-left: 6px; padding:6px 10px; border-radius:6px;}

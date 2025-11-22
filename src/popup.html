@@ -1,0 +1,45 @@
+<!-- src/popup.html -->
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Flow Facilitator</title>
+    <link rel="stylesheet" href="src/popup.css" />
+  </head>
+  <body>
+    <div id="root">
+      <h2>Flow Facilitator</h2>
+      <div>
+        <label>Study topic</label>
+        <input id="studyTopic" placeholder="E.g., Class 12 Physics NCERT" />
+      </div>
+      <div>
+        <label>Use LLM classifier</label>
+        <input type="checkbox" id="useLLM" />
+      </div>
+      <div>
+        <label>Backend URL</label>
+        <input id="backendUrl" placeholder="https://your-backend.example.com" />
+      </div>
+      <div>
+        <label>Sensitivity</label>
+        <input id="sensitivity" type="range" min="0.4" max="1.0" step="0.05" />
+      </div>
+      <div>
+        <button id="saveBtn">Save Settings</button>
+        <button id="startSession">Start Session</button>
+        <button id="stopSession">Stop Session</button>
+      </div>
+
+      <hr/>
+      <div>
+        <h4>Today</h4>
+        <div id="todayStats">Focus minutes: 0</div>
+        <button id="openLogs">Open Logs</button>
+      </div>
+
+    </div>
+    <script src="src/popup.js"></script>
+    <link rel="stylesheet" href="src/popup.css" />
+  </body>
+</html>
