@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Focus Session Report</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #121212; color: white; padding: 40px; max-width: 800px; margin: 0 auto; }
+        h1 { color: #4CAF50; border-bottom: 1px solid #333; padding-bottom: 20px; }
+        
+        .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
+        .card { background: #1e1e1e; padding: 20px; border-radius: 8px; border: 1px solid #333; }
+        .card h3 { margin-top: 0; color: #aaa; font-size: 14px; }
+        .card .value { font-size: 24px; font-weight: bold; }
+
+        .chart-container { background: #1e1e1e; padding: 20px; border-radius: 8px; border: 1px solid #333; margin-bottom: 30px; }
+        canvas { width: 100%; height: 300px; display: block; }
+
+        .log-list { list-style: none; padding: 0; }
+        .log-item { padding: 10px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; color: #ccc; }
+        .log-item.distraction { color: #ff5252; }
+        .log-item .time { color: #666; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+    <h1>📝 Session Report</h1>
+
+    <div class="summary-grid">
+        <div class="card">
+            <h3>Focus Goal</h3>
+            <div class="value" id="r-goal">Loading...</div>
+        </div>
+        <div class="card">
+            <h3>Duration</h3>
+            <div class="value" id="r-duration">0 min</div>
+        </div>
+    </div>
+
+    <div class="chart-container">
+        <h3>Focus Score Over Time</h3>
+        <canvas id="focusChart"></canvas>
+    </div>
+
+    <div class="card">
+        <h3>Event Log</h3>
+        <ul class="log-list" id="r-log"></ul>
+    </div>
+
+    <script src="report.js"></script>
+</body>
+</html>

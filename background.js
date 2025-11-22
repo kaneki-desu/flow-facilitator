@@ -1,17 +1,42 @@
 // ==========================================
 // CONFIGURATION
 // ==========================================
-// TODO: PASTE  HERE
-const GROQ_API_KEY = "YOUR GROQ API KEY";
+// TODO: PASTE YOUR GROQ API KEY HERE
+const GROQ_API_KEY = "Your groq API Key Here";
 const API_URL = "https://api.groq.com/openai/v1/chat/completions";
 
+// HARDCODED DISTRACTION LIST (Saves API Calls)
+const BLOCKED_DOMAINS = [
+    "instagram.com",
+    "facebook.com", 
+    "tiktok.com",
+    "twitter.com", 
+    "x.com",
+    "reddit.com",
+    "netflix.com",
+    "hulu.com",
+    "disneyplus.com",
+    "twitch.tv",
+    "pinterest.com",
+    "9gag.com",
+    "buzzfeed.com"
+];
+
 // State Management
-let userGoal = "General Productivity: Career related learning videos, exam related learning videos ";
-let flowScore = 78; // 0 to 100. > 80 is Flow State.
+let userGoal = "General Productivity";
+let flowScore = 0; // 0 to 100. > 80 is Flow State.
 let isFlowState = false;
 let currentVideoAnalysis = null;
 
 console.log("[Background] 🚀 Service Worker Initialized");
+
+// ==========================================
+// PASSIVE SCORE GAIN (Linear Function)
+// ==========================================
+// Increase score by 2 every minute if not distracted, simulating "building focus"
+setInterval(() => {
+    updateFlowScore('passive_gain');
+}, 60 * 1000); 
 
 // ==========================================
 // LLM ANALYSIS (The Core Feature)
@@ -24,23 +49,21 @@ async function analyzeContentRelevance(title, description) {
         return { productive: true, reason: "API Key missing" };
     }
 
-    // ULTRA-SAFEGUARD: Convert to string safely, handling null/undefined
     let safeDescription = "No description provided";
     if (description) {
         safeDescription = String(description);
     }
     
-    // Extra check: Ensure it really is a string before substring
     const snippet = (typeof safeDescription === 'string') 
-        ? safeDescription.substring(0, 200) 
+        ? safeDescription.substring(0, 300) 
         : "No description";
 
     const prompt = `
     User Study Goal: "${userGoal}"
-    Content Title: "${title}"
-    Content Description (snippet): "${snippet}"
+    Page Title: "${title}"
+    Content Snippet: "${snippet}"
     
-    Task: detailedly analyze if this content helps the user achieve their study goal.
+    Task: Detailedly analyze if this content is PRODUCTIVE for the goal or a DISTRACTION.
     Strictly output ONLY valid JSON in this format:
     {
         "productive": boolean,
@@ -74,11 +97,8 @@ async function analyzeContentRelevance(title, description) {
         }
 
         const text = data.choices[0].message.content;
-
-        // --- DEBUGGING LOGS ADDED HERE ---
         console.log("[Step 4] 📥 LLM RAW RESPONSE:", text);
 
-        // Clean and parse JSON
         const jsonStr = text.replace(/```json|```/g, "").trim();
         const parsedAnalysis = JSON.parse(jsonStr);
 
@@ -96,7 +116,6 @@ async function analyzeContentRelevance(title, description) {
 // MESSAGE LISTENER
 // ==========================================
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    console.log("[Background] 📨 Message Received:", request.type);
     
     if (request.type === "UPDATE_GOAL") {
         userGoal = request.goal;
@@ -106,16 +125,21 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         return false;
     }
 
-    if (request.type === "CHECK_YOUTUBE") {
-        // Ensure data exists before processing
+    // Renamed from CHECK_YOUTUBE to CHECK_CONTENT to reflect global capability
+    if (request.type === "CHECK_CONTENT") {
         if (request.data && request.data.title) {
-            console.log("[Step 1] 📥 Received YouTube Data from Content Script");
-            // Pass sendResponse to the async function to keep channel open
-            handleYouTubeCheck(request.data, sender.tab.id, sendResponse);
+            console.log("[Step 1] 📥 Received Content Data:", request.data.title);
+            // Reset previous analysis to prevent stale decision logic
+            currentVideoAnalysis = null; 
+            
+            // Extract URL from sender tab
+            const url = sender.tab ? sender.tab.url : "";
+            
+            handleContentCheck(request.data, sender.tab.id, url, sendResponse);
         } else {
             sendResponse({ status: "error", message: "No data" });
         }
-        return true; // KEEPS CHANNEL OPEN FOR ASYNC RESPONSE
+        return true; // Keep channel open
     }
 
     if (request.type === "GET_STATUS") {
@@ -125,7 +149,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
     if (request.type === "ACTIVITY_UPDATE") {
         updateFlowScore(request.action);
-        sendResponse({ ack: true }); // Acknowledge to prevent errors
+        sendResponse({ ack: true });
         return false;
     }
 });
@@ -133,45 +157,87 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 // ==========================================
 // LOGIC HANDLERS
 // ==========================================
-async function handleYouTubeCheck(data, tabId, sendResponse) {
-    const analysis = await analyzeContentRelevance(data.title, data.description);
+async function handleContentCheck(data, tabId, url, sendResponse) {
+    let analysis;
+
+    // 1. CHECK BLOCKLIST FIRST (Save API Calls)
+    // We check if the URL contains any of the blocked domains
+    const isBlocked = BLOCKED_DOMAINS.some(domain => url.toLowerCase().includes(domain));
+
+    if (isBlocked) {
+        console.log(`[Step 2] 🚫 Site is in Blocklist: ${url}. Skipping AI.`);
+        // Create synthetic "distraction" analysis
+        analysis = {
+            productive: false,
+            score: 0,
+            reason: "This website is in your known list of high-distraction sites."
+        };
+    } else {
+        // 2. IF NOT BLOCKED, ASK LLM
+        analysis = await analyzeContentRelevance(data.title, data.description);
+    }
+
     currentVideoAnalysis = analysis;
 
+    // Threshold for distraction (Score < 4)
     if (analysis.score < 4) {
-        console.log(`[Step 6] ⚠️ Distraction Detected (Score: ${analysis.score}). Sending Warning.`);
+        console.log(`[Step 6] ⚠️ Distraction Detected (Score: ${analysis.score}). Applying Penalty.`);
         updateFlowScore('distraction');
         
-        // Guard against "tab closed" errors
         if (tabId) {
             try {
                 await chrome.tabs.sendMessage(tabId, {
                     type: "SHOW_WARNING",
-                    message: `Distraction Detected! This doesn't align with "${userGoal}".\nReason: ${analysis.reason}`
+                    message: `⚠️ Distraction Detected!\nThis content does not align with "${userGoal}".\nReason: ${analysis.reason}`
                 });
             } catch (e) {
                 console.log("[Background] Tab closed before warning could be sent.");
             }
         }
     } else {
-        console.log(`[Step 6] ✅ Productive Content (Score: ${analysis.score}). Boosting Score.`);
-        updateFlowScore('productive');
+        console.log(`[Step 6] ✅ Productive Content. Maintaining Focus.`);
+        // We DO NOT add score here anymore. Score only increases linearly with time.
     }
 
-    // CRITICAL FIX: Close the message channel
     sendResponse({ status: "completed", analysis: analysis });
 }
 
 function updateFlowScore(action) {
     const oldScore = flowScore;
-    if (action === 'productive') flowScore = Math.min(100, flowScore + 5);
-    if (action === 'distraction') flowScore = Math.max(0, flowScore - 15);
-    if (action === 'tab_switch') flowScore = Math.max(0, flowScore - 2);
-    if (action === 'typing') flowScore = Math.min(100, flowScore + 1);
+    let change = 0;
+
+    // LINEAR GROWTH
+    if (action === 'passive_gain') {
+        // +2 points every minute, capped at 100
+        change = 2;
+    }
+    
+    // DYNAMIC PENALTY
+    if (action === 'distraction') {
+        // The higher the score, the bigger the fall.
+        // Base penalty 10 + 30% of current score.
+        // If score is 100 -> Penalty is 40.
+        // If score is 20 -> Penalty is 6.
+        const penalty = 10 + (flowScore * 0.3);
+        change = -Math.floor(penalty);
+    }
+
+    if (action === 'tab_switch') {
+        change = -1; // Small penalty for erratic switching
+    }
+    
+    if (action === 'typing') {
+        change = 0; // Typing keeps flow alive, but doesn't artificially boost it fast
+    }
+
+    flowScore = Math.min(100, Math.max(0, flowScore + change));
 
     const wasFlow = isFlowState;
     isFlowState = flowScore > 80;
 
-    console.log(`📊 Score Update: [${action}] ${oldScore} -> ${flowScore} (Flow: ${isFlowState})`);
+    if (Math.abs(change) > 0) {
+        console.log(`📊 Score Update: [${action}] ${oldScore} -> ${flowScore} (Flow: ${isFlowState})`);
+    }
 
     if (!wasFlow && isFlowState) {
         enableFlowProtection();
