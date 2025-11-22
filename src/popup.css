@@ -1,7 +1,0 @@
-/* src/popup.css */
-body { font-family: Arial, sans-serif; width: 340px; padding:12px; }
-h2 { margin:0 0 8px 0;}
-label { display:block; margin-top:8px; font-size:12px; color:#333;}
-input[type="text"], input[type="url"], input[type="range"], input { width:100%; padding:6px; margin-top:4px; box-sizing:border-box; }
-button { margin-top:8px; padding:6px 10px; border-radius:6px; cursor:pointer;}
-hr { margin:12px 0; }

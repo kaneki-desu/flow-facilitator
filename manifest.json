@@ -1,42 +1,42 @@
 {
   "manifest_version": 3,
-  "name": "Flow Facilitator",
-  "version": "1.0.0",
-  "description": "AI-driven flow state detection and productivity assistant.",
-
+  "name": "Flow Facilitator - AI Focus",
+  "version": "1.0",
+  "description": "AI-powered flow state guardian. Analyzes YouTube productivity and blocks distractions.",
   "permissions": [
     "storage",
     "tabs",
+    "scripting",
     "activeTab",
-    "scripting"
+    "alarms"
   ],
-
   "host_permissions": [
-    "*://*.youtube.com/*",
-    "<all_urls>"
+    "https://api.groq.com/*",
+    "https://*.youtube.com/*",
+    "https://generativelanguage.googleapis.com/*"
   ],
-
   "background": {
-    "service_worker": "src/service_worker.js",
-    "type": "module"
+    "service_worker": "background.js"
   },
-
   "action": {
-    "default_popup": "src/popup.html",
-    "default_title": "Flow Facilitator"
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icon.png", 
+      "48": "icon.png",
+      "128": "icon.png"
+    }
   },
-
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["src/content_script.js"],
-      "css": ["src/overlay.css"]
+      "js": ["content.js"],
+      "css": ["styles.css"]
     }
   ],
-
-  "icons": {
-    "16": "icons/icon16.png",
-    "48": "icons/icon48.png",
-    "128": "icons/icon128.png"
-  }
+  "web_accessible_resources": [
+    {
+      "resources": ["styles.css"],
+      "matches": ["<all_urls>"]
+    }
+  ]
 }
