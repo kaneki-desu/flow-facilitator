@@ -1,0 +1,60 @@
+/* Toast Notification */
+.flow-toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #1a1a1a;
+    color: #00C853;
+    padding: 15px 25px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    z-index: 99999;
+    font-family: sans-serif;
+    border-left: 5px solid #00C853;
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+}
+
+/* Warning Overlay */
+#flow-warning-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(0,0,0,0.85);
+    z-index: 2147483647; /* Maximum Z-Index */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(5px);
+}
+
+.flow-modal {
+    background: #2d2d2d;
+    color: white;
+    padding: 30px;
+    border-radius: 12px;
+    text-align: center;
+    max-width: 400px;
+    border: 1px solid #444;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.flow-modal h2 { margin-top: 0; color: #ff5252; }
+.flow-modal p { line-height: 1.5; color: #ccc; }
+
+.flow-modal button {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 20px;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.flow-modal button:hover { background: #45a049; }
